@@ -30,8 +30,8 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.example.gp.a2allak_feen.MapsActivity;
-import com.example.gp.a2allak_feen.R;
+import com.example.gp.a2allakfeendemo.MapsActivity;
+import com.example.gp.a2allakfeendemo.R;
 
 import java.util.ArrayList;
 

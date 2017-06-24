@@ -32,7 +32,7 @@ public class Tracking {
         Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
             @Override
             protected String doWork() {
-                String result = dBmanager.sendGetRequest("demo.php");
+                String result = dBmanager.sendRequest("GET",true,"demo.php",null);
                 return result;
             }
 
@@ -43,6 +43,7 @@ public class Tracking {
                 if (result != null){
                     final Gson gson = new Gson();
                     TrackerJSON tracker_json = gson.fromJson(result, TrackerJSON.class);
+
                     LatLng UpadatedLocation = new LatLng(tracker_json.latitude, tracker_json.longitude);
                     outMap.addMarker(new MarkerOptions().position(UpadatedLocation).title("You are here"));
                     outMap.moveCamera(CameraUpdateFactory.newLatLng(UpadatedLocation));
