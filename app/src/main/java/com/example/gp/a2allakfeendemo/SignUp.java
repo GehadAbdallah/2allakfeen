@@ -21,6 +21,7 @@ public class SignUp extends AppCompatActivity {
         final EditText email = (EditText) findViewById(email_text);
 
         Button signUp_btn = (Button) findViewById(R.id.signUp_btn2);
+
         signUp_btn.setOnClickListener(new View.OnClickListener( ) {
             @Override
             public void onClick(View view) {
@@ -28,6 +29,9 @@ public class SignUp extends AppCompatActivity {
                 String password_text = password.getText().toString();
                 String email_text = email.getText().toString();
                 Log.v("SignUp",user_name_text);
+
+                //validate there are inputs.
+                //TODO: should validate the inputs itself
                 if (user_name_text == null)
                     user_name.setError("Field Cannot be left blank");
                 if (password_text == null)
@@ -37,8 +41,6 @@ public class SignUp extends AppCompatActivity {
 
                 controller.SignUp(user_name_text, email_text, password_text,view);
 
-//                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-//                startActivity(intent);
             }
         });
     }
