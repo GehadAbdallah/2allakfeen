@@ -85,7 +85,6 @@ public class Controller {
 
         //construct list of the parameters to be sent in the request
         final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-        Log.v("Controller",user_name);
         parameters.add(new Parameter("name",user_name));
         parameters.add(new Parameter("email",email));
         parameters.add(new Parameter("password",password));

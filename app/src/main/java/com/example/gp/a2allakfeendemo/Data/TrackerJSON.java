@@ -6,4 +6,5 @@ package com.example.gp.a2allakfeendemo.Data;
 public class TrackerJSON {
     public double latitude;
     public double longitude;
+
 }

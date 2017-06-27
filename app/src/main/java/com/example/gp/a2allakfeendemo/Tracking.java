@@ -1,13 +1,17 @@
 package com.example.gp.a2allakfeendemo;
 
-import android.util.Log;
-
+import com.example.gp.a2allakfeendemo.Data.Parameter;
 import com.example.gp.a2allakfeendemo.Data.TrackerJSON;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 import needle.Needle;
 import needle.UiRelatedTask;
@@ -27,26 +31,38 @@ public class Tracking {
 
     // get bus location and display it on the map
     public void TrackBus(String busNumber){
-
-        //TODO:should add the functionality to track a certain bus number
+        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
+        parameters.add(new Parameter("bus_number",busNumber));
         Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
             @Override
             protected String doWork() {
-                String result = dBmanager.sendRequest("GET",true,"demo.php",null);
+                String result = dBmanager.sendRequest("GET",true,"fetch_location.php",parameters);
                 return result;
             }
 
             @Override
             protected void thenDoUiRelatedWork(String result) {
-                //mSomeTextView.setText("result: " + result);
-                Log.d("OnPOSTEXECUTE","Enter");
-                if (result != null){
-                    final Gson gson = new Gson();
-                    TrackerJSON tracker_json = gson.fromJson(result, TrackerJSON.class);
+                //TODO:Select the nearest two buses
+                try {
+                    if (result != null) {
+                        TrackerJSON tracker_json = new TrackerJSON();
 
-                    LatLng UpadatedLocation = new LatLng(tracker_json.latitude, tracker_json.longitude);
-                    outMap.addMarker(new MarkerOptions().position(UpadatedLocation).title("You are here"));
-                    outMap.moveCamera(CameraUpdateFactory.newLatLng(UpadatedLocation));
+                        JSONObject jsonObj = new JSONObject(result);
+                        JSONArray positions = jsonObj.getJSONArray("positions");
+                        ArrayList<LatLng> UpadatedLocation = new ArrayList<LatLng>();
+
+                        for(int i=0; i<positions.length(); i++){
+                            JSONObject pos = positions.getJSONObject(i);
+                            tracker_json.latitude = pos.getDouble("latitude");
+                            tracker_json.longitude = pos.getDouble("longitude");
+                            UpadatedLocation.add(new LatLng(tracker_json.latitude, tracker_json.longitude));
+                            outMap.addMarker(new MarkerOptions().position(UpadatedLocation.get(i)));
+                            outMap.moveCamera(CameraUpdateFactory.newLatLng(UpadatedLocation.get(i)));
+                        }
+                    }
+                }
+                catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
