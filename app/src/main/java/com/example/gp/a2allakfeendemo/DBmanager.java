@@ -44,7 +44,7 @@ public class DBmanager {
                     }
                 }
                 //Connection
-                Log.v("final_url",url_str);
+                Log.d("final_url",url_str);
                 Uri builtUri = Uri.parse(url_str);
                 URL url = new URL(builtUri.toString());
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();

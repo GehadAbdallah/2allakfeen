@@ -1,6 +1,8 @@
 package com.example.gp.a2allakfeendemo;
 
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -12,14 +14,16 @@ import android.widget.EditText;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 
 import static com.example.gp.a2allakfeendemo.WelcomeActivity.controller;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener {
 
     private GoogleMap mMap;
     private EditText busNumber;
     private Button trackButton;
+    private LatLng user_location;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,9 +69,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 //call Track function and send the map to be rendered and the bus number to be tracked
-                controller.Track(mMap,busNumber.getText().toString());
+                controller.Track(mMap,busNumber.getText().toString(),user_location);
             }
         });
+    }
+
+    @Override
+    public void onLocationChanged(Location location){
+        user_location = new LatLng(location.getLatitude(), location.getLongitude());
+
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
     }
 
 

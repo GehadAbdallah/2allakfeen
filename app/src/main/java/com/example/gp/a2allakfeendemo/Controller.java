@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.example.gp.a2allakfeendemo.Data.Parameter;
 import com.example.gp.a2allakfeendemo.Data.SignJSON;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -126,10 +127,19 @@ public class Controller {
     }
 
     //This function connect to Tracker model to track a certain bus number
-    public void Track(GoogleMap map,String busNumber){
+    public void Track(GoogleMap map, final String busNumber, final LatLng user_location){
 
-        Tracking Tracker = new Tracking(map);
-        Tracker.TrackBus(busNumber);
+        final Tracking Tracker = new Tracking(map);
+        Tracker.TrackBus(busNumber,user_location);
+//        Timer myTimer = new Timer();
+//        myTimer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                // call each second
+//                Tracker.TrackBus(busNumber,user_location);
+//            }
+//        }, 0, 60000);
+
     }
 
 }
