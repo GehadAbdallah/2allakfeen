@@ -127,9 +127,9 @@ public class Controller {
     }
 
     //This function connect to Tracker model to track a certain bus number
-    public void Track(GoogleMap map, final String busNumber, final LatLng user_location){
+    public void Track(GoogleMap map, final String busNumber, final LatLng user_location,View view){
 
-        final Tracking Tracker = new Tracking(map);
+        final Tracking Tracker = new Tracking(map,view);
         Tracker.TrackBus(busNumber,user_location);
 //        Timer myTimer = new Timer();
 //        myTimer.schedule(new TimerTask() {

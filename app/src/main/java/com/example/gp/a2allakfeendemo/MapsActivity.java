@@ -69,7 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 //call Track function and send the map to be rendered and the bus number to be tracked
-                controller.Track(mMap,busNumber.getText().toString(),user_location);
+                controller.Track(mMap,busNumber.getText().toString(),user_location,v);
             }
         });
     }
