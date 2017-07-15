@@ -1,57 +1,117 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- The main content -->
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.gp.a2allakfeendemo.MapsActivity" />
-
-    <EditText
-        android:id="@+id/SearchEditText"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_gravity="top"
-        android:layout_marginTop="80dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginLeft="20dp"
-        android:background="#FFFFFF"
-        android:alpha="0.8"
-        android:hint="Where to?"
-        android:paddingLeft="20dp"
-        android:textSize="25dp"
-        android:clickable="true" />
-
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <EditText
-            android:id="@+id/TrackEditText"
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_gravity="center_horizontal|bottom"
-            android:background="#FFFFFF"
-            android:hint="Bus Number"
-            android:paddingLeft="40dp"
+            android:layout_height="match_parent"
+            tools:context="com.example.gp.a2allakfeendemo.MapsActivity" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
 
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true">
-        </EditText>
-        <Button
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:id="@+id/TrackButton"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignBottom="@+id/TrackEditText"
-            android:layout_marginLeft="270dp"
-            android:text="Track"
-            style="@style/Widget.AppCompat.Button.Borderless"/>
-    </RelativeLayout>
-</FrameLayout>
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            >
+            <android.support.design.widget.TabLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:background="@color/colorBackground"
+                android:id="@+id/tabs"
+                app:tabTextColor="@color/colorAccent"
+                app:tabSelectedTextColor="@color/colorAccent"
+                >
+
+                <android.support.design.widget.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="100dp"
+                    android:text="Source"
+                    android:id="@+id/srcTab"/>
+
+                <android.support.design.widget.TabItem
+                    android:layout_height="100dp"
+                    android:layout_width="wrap_content"
+                    android:text="Destination"
+                    android:id="@+id/DestTab"
+                    />
+
+            </android.support.design.widget.TabLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorBackground"
+            >
+            <fragment
+                android:id="@+id/place_autocomplete_fragment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+                tools:layout="@layout/place_autocomplete_fragment" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/TheMap"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="250dp"
+                android:adjustViewBounds="true"
+                android:backgroundTint="@color/colorBackground"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_go_2" />
+
+            <EditText
+                android:id="@+id/TrackEditText"
+                android:layout_width="290dp"
+                android:layout_height="60dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_gravity="center_horizontal|bottom"
+                android:background="#FFFFFF"
+                android:hint="Bus Number"
+                android:paddingLeft="40dp"
+                android:textColor="#000000"
+                android:textColorHint="#D1D9E5"></EditText>
+
+            <ImageButton
+                android:id="@+id/TrackButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_alignBottom="@+id/TrackEditText"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_toEndOf="@+id/TrackEditText"
+                android:layout_toRightOf="@+id/TrackEditText"
+                android:adjustViewBounds="true"
+                android:background="@color/colorBackground"
+                android:scaleType="fitCenter"
+                android:src="@drawable/track_bus_2"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+    </FrameLayout>

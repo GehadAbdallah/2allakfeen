@@ -15,6 +15,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 import needle.Needle;
@@ -29,6 +32,12 @@ import static com.example.gp.a2allakfeendemo.WelcomeActivity.MyPREFERENCES;
 public class Controller {
     protected DBmanager dBmanager;
     public static int currentUser;
+    public static String district;
+    public static String bus_stations_result;
+    public static String metro_stations_result;
+    public static String time_result;
+    public static String routes_result;
+    public static String rate_result;
     SharedPreferences sharedpreferences;
     public Controller() {
         this.dBmanager = new DBmanager();
@@ -100,32 +109,194 @@ public class Controller {
             @Override
             protected void thenDoUiRelatedWork(String result) {
                 if (result != null){
-                    Log.v("result= ",result);
-                    //parse the json result
-                    final Gson gson = new Gson();
-                    SignJSON signUp_success = gson.fromJson(result,SignJSON.class);
+                    try {
 
 
-                    if(signUp_success.user_id != -1){
-                        //add the user id of the added user to the prefrences
-                        sharedpreferences = view.getContext().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedpreferences.edit();
-                        editor.putInt("CurrentUser",signUp_success.user_id);
-                        editor.commit();
-                        //redirect to maps Activity
-                        view.getContext().startActivity(new Intent(view.getContext(),MapsActivity.class));
-                    }
-                    else{
-                        //if adding the new user failed , error message appear to the user
-                        Toast toast = Toast.makeText(view.getContext(),"Database error, try again.", Toast.LENGTH_LONG);
-                        toast.setGravity(Gravity.CENTER, 0, 0);
-                        toast.show();
+                        Log.v("result= ",result);
+                        //parse the json result
+                        final Gson gson = new Gson();
+                        SignJSON signUp_success = gson.fromJson(result,SignJSON.class);
+                        JSONObject signUpResponse = new JSONObject(result);
+                        boolean UserNameExists = signUpResponse.getBoolean("UserNameExists");
+                        if (UserNameExists == false) {
+                            boolean emailExists = signUpResponse.getBoolean("emailExists");
+                            if (emailExists == false) {
+                                int user_id = signUpResponse.getInt("user_id");
+                                if (user_id != -1) {
+                                    //add the user id of the added user to the prefrences
+                                    sharedpreferences = view.getContext().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                                    editor.putInt("CurrentUser", signUp_success.user_id);
+                                    editor.commit();
+                                    //redirect to maps Activity
+                                    view.getContext().startActivity(new Intent(view.getContext(), MapsActivity.class));
+                                } else {
+                                    //if adding the new user failed , error message appear to the user
+                                    Toast toast = Toast.makeText(view.getContext(), "Database error, try again.", Toast.LENGTH_LONG);
+                                    toast.setGravity(Gravity.CENTER, 0, 0);
+                                    toast.show();
+                                }
+                            }else {
+                                //if email existed before
+                                Toast toast = Toast.makeText(view.getContext(), "Email is already signed up.", Toast.LENGTH_LONG);
+                                toast.setGravity(Gravity.CENTER, 0, 0);
+                                toast.show();
+                            }
+                        }else{
+                            //if user name existed before
+                            Toast toast = Toast.makeText(view.getContext(), "Username existed before, try different one or sign in.", Toast.LENGTH_LONG);
+                            toast.setGravity(Gravity.CENTER, 0, 0);
+                            toast.show();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
             }
         });
     }
 
+    public void GetBusStations (){
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendGetRequest("busstations.php");
+                //Log.d("doWork",result);
+                bus_stations_result = result;
+                return bus_stations_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+                //mSomeTextView.setText("result: " + result);
+                //Log.d("OnPOSTEXECUTE",result);
+            }
+        });
+    }
+
+    public void GetMetroStations (){
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendGetRequest("metrostations.php");
+                Log.d("doWork",result);
+                metro_stations_result = result;
+                return metro_stations_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+            }
+        });
+    }
+
+    public void GetRoutes (String src,String dst){
+        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
+        parameters.add(new Parameter("src",src));
+        parameters.add(new Parameter("dst",dst));
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendRequest("POST",true,"getroutes.php",parameters);
+                Log.d("doWork",result);
+                routes_result = result;
+                return routes_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+            }
+        });
+    }
+
+    public void GetRates (int routeID){
+        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
+        parameters.add(new Parameter("routeID",Integer.toString(routeID)));
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendRequest("POST",true,"getrates.php",parameters);
+                Log.d("doWork",result);
+                rate_result = result;
+                return rate_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+            }
+        });
+    }
+
+    public void InsertRoute (String src,String dst,String routeTobeSaved){
+        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
+        parameters.add(new Parameter("src",src));
+        parameters.add(new Parameter("dst",dst));
+        parameters.add(new Parameter("routeTobeSaved",routeTobeSaved));
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendRequest("POST",true,"insertroute.php",parameters);
+                return result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+                Log.d("OnPOSTEXECUTE","Enter");
+                if (result != null){
+                    //TODO: if inserted succefully go to the maps activity
+                    Log.v("result= ",result);
+                }
+            }
+        });
+    }
+
+    public void Get_District (final LatLng latLng){
+        Log.d("IN","Get_District CONTROLLER");
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                Log.d("IN", "Get_District doWork");
+                Log.e("doWork_district",Double.toString(latLng.latitude));
+                String result = dBmanager.sendGetDistrict(latLng);
+                Log.d("result", result);
+                district = result;
+                return district;
+            }
+            @Override
+            protected void thenDoUiRelatedWork(String district) {
+                Log.d("DISTRICT",district);
+            }
+        });
+    }
+
+    public void GetTime (final ArrayList<LatLng> Stations, final boolean Bus){
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String Origin, dest;
+                ArrayList<LatLng> WayPoints = new ArrayList<LatLng>();
+                Origin = Double.toString(Stations.get(0).latitude)+","+Double.toString(Stations.get(0).longitude);
+                dest = Double.toString(Stations.get(Stations.size()-1).latitude)+","+Double.toString(Stations.get(Stations.size()-1).longitude);
+                if (Stations.size() > 2){
+                    for (int i = 1; i < Stations.size()-1; i++){
+                        WayPoints.add(Stations.get(i));
+                    }
+                }
+                String result = dBmanager.sendGetTime(Origin,dest,WayPoints,Bus);
+                time_result = result;
+                return time_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+            }
+        });
+    }
+
+    public void GetSuggestions(LatLng Src, LatLng Dst, View v, Context c) {
+        Suggestions sugObj = new Suggestions();
+        sugObj.Get_Suggestions(Src,Dst,v,c);
+    }
     //This function connect to Tracker model to track a certain bus number
     public void Track(GoogleMap map, final String busNumber, final LatLng user_location,View view){
 
@@ -138,7 +309,7 @@ public class Controller {
 //                // call each second
 //                Tracker.TrackBus(busNumber,user_location);
 //            }
-//        }, 0, 60000);
+//        }, 0, 10000);
 
     }
 

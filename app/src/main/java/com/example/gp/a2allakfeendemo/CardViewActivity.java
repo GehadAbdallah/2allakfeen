@@ -31,6 +31,8 @@ import com.example.gp.a2allakfeendemo.ViewAdapters.DataObject;
 import com.example.gp.a2allakfeendemo.ViewAdapters.MyRecyclerViewAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class CardViewActivity extends AppCompatActivity {
@@ -39,19 +41,20 @@ public class CardViewActivity extends AppCompatActivity {
     private MyRecyclerViewAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private static String LOG_TAG = "CardViewActivity";
+    private String result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_view);
 
+        result = getIntent().getStringExtra("Result");
         mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new MyRecyclerViewAdapter(getDataSet(),getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
-
         // Code to Add an item with default animation
         //((MyRecyclerViewAdapter) mAdapter).addItem(obj, index);
 
@@ -72,13 +75,53 @@ public class CardViewActivity extends AppCompatActivity {
         });
     }
 
+
+
     private ArrayList<DataObject> getDataSet() {
-        ArrayList results = new ArrayList<DataObject>();
-        for (int index = 0; index < 20; index++) {
-            DataObject obj = new DataObject("Some Primary Text " + index,
-                    "Secondary " + index);
-            results.add(index, obj);
+        ArrayList results = new ArrayList<>();
+        List<String> routes = Arrays.asList(result.split(";"));
+        for (int i = 0; i < routes.size(); i++) {
+            int index = i+1;
+            String text1 = "Route " + index;
+            String text2 = routes.get(i);
+            DataObject obj = new DataObject(text1,text2);
+            results.add(obj);
         }
+
+//        String text1 = "Route 1";
+//        String text2 = "Bus 990 - From Ain Shams to Cairo University";
+//        DataObject obj = new DataObject(text1,
+//                    text2);
+//            results.add(obj);
+//
+//        text1 = "Route 2";
+//        text2 = "Metro 1 - From Ain Shams to Shohadaa" + "\n" +
+//                "Metro 2 - From Shohadaa to Cairo University";
+//        obj = new DataObject(text1,
+//                text2);
+//        results.add(obj);
+//
+//        text1 = "Route 3";
+//        text2 = "Bus 310 From Ain Shams to Al-Mahkama" + "\n" +
+//                "Bus 137 From Al-Mahkama to Cairo University";
+//        obj = new DataObject(text1,
+//                text2);
+//        results.add(obj);
+//
+//        text1 = "Route 4";
+//        text2 = "Metro 1 - From Ain Shams to Ghamra" + "\n" +
+//                "Bus 1030 - From Ghamra to Cairo University";
+//        obj = new DataObject(text1,
+//                text2);
+//        results.add(obj);
+//
+//        text1 = "Route 5";
+//        text2 = "Metro 1 - From Ain Shams to Al-Tahrir" + "\n" +
+//                "Metro 2 - From Al-Tahrir to Cairo University";
+//        obj = new DataObject(text1,
+//                text2);
+//        results.add(obj);
+
         return results;
     }
 }

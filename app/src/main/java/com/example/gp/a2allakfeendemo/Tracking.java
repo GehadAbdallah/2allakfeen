@@ -27,7 +27,6 @@ import needle.UiRelatedTask;
 /**
  * Created by Gehad on 5/20/2017.
  */
-//TODO: A problem in stations array , parse json doesn't save it right.
 public class Tracking {
     GoogleMap outMap;
     View outView;
@@ -35,11 +34,12 @@ public class Tracking {
     DBmanager dBmanager;
     int max_station_order;
     int min_station_order;
+    BusStation userNearestStation;
     ArrayList<TrackerJSON> Buses;
     ArrayList<BusStation> stations;
-    ArrayList<TrackerJSON> movingForwardBuses;
+//    ArrayList<TrackerJSON> movingForwardBuses;
     ArrayList<TrackerJSON> busesDisplayed = new ArrayList<>();
-    ArrayList<distance> user_stat_dists = new ArrayList<distance>();
+//    ArrayList<distance> user_stat_dists = new ArrayList<distance>();
 
     public Tracking(GoogleMap outMap, View view) {
         this.outMap = outMap;
@@ -48,31 +48,30 @@ public class Tracking {
     }
 
 
-    private void getNearestBusses(final int index,BusStation nearestStatUser){
+    private  TrackerJSON getBusInfo(int index){
 
         final String link = "https://maps.googleapis.com/maps/api/directions/json";
         final TrackerJSON currentBus = Buses.get(index);
         int step = currentBus.last_visited_station_order - currentBus.prev_to_last_station_order;
         int next_station_order = currentBus.last_visited_station_order + step;
         //for tests only//////////////////////////////////
-        nearestStatUser.order = next_station_order + step;
+        userNearestStation.order = next_station_order + step;
         for (int i=0 ; i<3 ; i++) {
-            if (nearestStatUser.order != max_station_order && nearestStatUser.order!= min_station_order)
-                nearestStatUser.order = next_station_order + step;
+            if (userNearestStation.order != max_station_order && userNearestStation.order!= min_station_order)
+                userNearestStation.order = next_station_order + step;
 
         }
         for (BusStation stat : stations) {
-            if (stat.order == nearestStatUser.order)
-                nearestStatUser = stat;
+            if (stat.order == userNearestStation.order)
+                userNearestStation = stat;
         }
-        final BusStation nearestStatFinal = nearestStatUser;
         ////////////////////////////
         //parameters needed by api
         //origin=41.43206,-81.38992 (source location: bus location) , destination (nearest station to user's source location)
         //Key,waypoints preceded by via: (stations between Bus and nearest station),departure_time= now
         final ArrayList<Parameter> parameters = new ArrayList<>();
         String origin =Double.toString(currentBus.current_latitude)+","+Double.toString(currentBus.current_longitude);
-        String destination = Double.toString(nearestStatUser.latitude)+","+Double.toString(nearestStatUser.longitude);
+        String destination = Double.toString(userNearestStation.latitude)+","+Double.toString(userNearestStation.longitude);
         String key = "AIzaSyDiDgy4erJKrAHGJJzYG_cFkh17qJjQiN8";
         String departure_time = "now";
         String waypoints="";
@@ -80,8 +79,8 @@ public class Tracking {
         int i=0;
         Log.e("step",Integer.toString(step));
         Log.e("next_station_order",Integer.toString(next_station_order));
-        Log.e("nearestStatUser.order",Integer.toString(nearestStatUser.order));
-        while (next_station_order != nearestStatUser.order){
+        Log.e("nearestStatUser.order",Integer.toString(userNearestStation.order));
+        while (next_station_order != userNearestStation.order){
             Log.e("inside loop","inside loop");
             for (int j=0;j<stations.size();j++) {
                 BusStation stat = stations.get(j);
@@ -112,140 +111,164 @@ public class Tracking {
         parameters.add(new Parameter("key",key));
         parameters.add(new Parameter("departure_time",departure_time));
         parameters.add(new Parameter("waypoints",waypoints));
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String result = dBmanager.sendRequest("GET",false,link,parameters);
-                return result;
-            }
-
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-                Log.v("Direction API result",result);
-                try {
-                    //parse the response
-                    JSONObject json = new JSONObject(result);
-                    JSONObject legs = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0);
-                    JSONArray steps = legs.getJSONArray("steps");
-                    ArrayList<LatLng> polylines = polyObject.getDirectionPolylines(steps);
-                    int dist = legs.getJSONObject("distance").getInt("value");
-                    String duration = legs.getJSONObject("duration_in_traffic").getString("text");
-                    currentBus.distance_to_nearest = dist;
-                    currentBus.duration_text_to_nearest = duration;
-                    currentBus.route_polylines = polylines;
-                    busesDisplayed.add(currentBus);
-                    //i'm not sure from the if statment
+        String result = dBmanager.sendRequest("GET",false,link,parameters);
+        try {
+            //parse the response
+            JSONObject json = new JSONObject(result);
+            JSONObject legs = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0);
+            JSONArray steps = legs.getJSONArray("steps");
+            ArrayList<LatLng> polylines = polyObject.getDirectionPolylines(steps);
+            int dist = legs.getJSONObject("distance").getInt("value");
+            String duration = legs.getJSONObject("duration_in_traffic").getString("text");
+            currentBus.distance_to_nearest = dist;
+            currentBus.duration_text_to_nearest = duration;
+            currentBus.route_polylines = polylines;
+//            busesDisplayed.add(currentBus);
+            //i'm not sure from the if statment
 //                    if (busesDisplayed.size() == movingForwardBuses.size()){
 
-                        //sort the buses by the nearest
-                        for (int i=0 ; i< busesDisplayed.size() ; i++) {
-                            for (int j = i + 1; j < busesDisplayed.size(); j++)
-                                if (busesDisplayed.get(i).distance_to_nearest > busesDisplayed.get(j).distance_to_nearest) {
-                                    TrackerJSON tempBus = busesDisplayed.get(i);
-                                    busesDisplayed.set(i, busesDisplayed.get(j));
-                                    busesDisplayed.set(j, tempBus);
-                                }
-                        }
+            //sort the buses by the nearest
+//            for (int i=0 ; i< busesDisplayed.size() ; i++) {
+//                for (int j = i + 1; j < busesDisplayed.size(); j++)
+//                    if (busesDisplayed.get(i).distance_to_nearest > busesDisplayed.get(j).distance_to_nearest) {
+//                        TrackerJSON tempBus = busesDisplayed.get(i);
+//                        busesDisplayed.set(i, busesDisplayed.get(j));
+//                        busesDisplayed.set(j, tempBus);
+//                    }
+//            }
+//
+//            //display the busses
+//            if (busesDisplayed.size() < 3)
+//                DisplayBuses(busesDisplayed,busesDisplayed.size(),nearestStatFinal);
+//            else
+//                DisplayBuses(busesDisplayed,3,nearestStatFinal);
 
-                        //display the busses
-                        if (busesDisplayed.size() < 3)
-                            DisplayBuses(busesDisplayed,busesDisplayed.size(),nearestStatFinal);
-                         else
-                            DisplayBuses(busesDisplayed,3,nearestStatFinal);
+            //                  }
 
-  //                  }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return currentBus;
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+//        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+//            @Override
+//            protected String doWork() {
+//                String result = dBmanager.sendRequest("GET",false,link,parameters);
+//                return result;
+//            }
+//
+//            @Override
+//            protected void thenDoUiRelatedWork(String result) {
+//                Log.v("Direction API result",result);
+//                try {
+//                    //parse the response
+//                    JSONObject json = new JSONObject(result);
+//                    JSONObject legs = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0);
+//                    JSONArray steps = legs.getJSONArray("steps");
+//                    ArrayList<LatLng> polylines = polyObject.getDirectionPolylines(steps);
+//                    int dist = legs.getJSONObject("distance").getInt("value");
+//                    String duration = legs.getJSONObject("duration_in_traffic").getString("text");
+//                    currentBus.distance_to_nearest = dist;
+//                    currentBus.duration_text_to_nearest = duration;
+//                    currentBus.route_polylines = polylines;
+//                    busesDisplayed.add(currentBus);
+//                    //i'm not sure from the if statment
+////                    if (busesDisplayed.size() == movingForwardBuses.size()){
+//
+//                        //sort the buses by the nearest
+//                        for (int i=0 ; i< busesDisplayed.size() ; i++) {
+//                            for (int j = i + 1; j < busesDisplayed.size(); j++)
+//                                if (busesDisplayed.get(i).distance_to_nearest > busesDisplayed.get(j).distance_to_nearest) {
+//                                    TrackerJSON tempBus = busesDisplayed.get(i);
+//                                    busesDisplayed.set(i, busesDisplayed.get(j));
+//                                    busesDisplayed.set(j, tempBus);
+//                                }
+//                        }
+//
+//                        //display the busses
+//                        if (busesDisplayed.size() < 3)
+//                            DisplayBuses(busesDisplayed,busesDisplayed.size(),nearestStatFinal);
+//                         else
+//                            DisplayBuses(busesDisplayed,3,nearestStatFinal);
+//
+//  //                  }
+//
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
 
     }
 
     //get the nearest station to the user's source by getting the distances between the source and each station and get the min distance
-    private void getDistance_maps(LatLng user_source){
+    private BusStation getUserNearestStation_maps(LatLng user_source) {
         final String link = "https://maps.googleapis.com/maps/api/distancematrix/json";
-
         //parameters needed by api : origins=41.43206,-81.38992,destinations,key,departure_time=now,mode=walking
         final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
 //        String origins = Double.toString(user_location.latitude)+","+Double.toString(user_location.longitude);
         String origins = "29.980379,31.212999"; //hard coded for tests
         String destination = "";
-        for (int i=0;i<stations.size();i++) {
-            if(i==0)
-                destination += Double.toString(stations.get(i).latitude)+","+Double.toString(stations.get(i).longitude);
-            else
-            {
-                destination +="|";
-                destination += Double.toString(stations.get(i).latitude)+","+Double.toString(stations.get(i).longitude);
+        for (int i = 0; i < stations.size(); i++) {
+            if (i == 0)
+                destination += Double.toString(stations.get(i).latitude) + "," + Double.toString(stations.get(i).longitude);
+            else {
+                destination += "|";
+                destination += Double.toString(stations.get(i).latitude) + "," + Double.toString(stations.get(i).longitude);
             }
         }
-        parameters.add(new Parameter("origins",origins ));
-        parameters.add(new Parameter("key","AIzaSyDiDgy4erJKrAHGJJzYG_cFkh17qJjQiN8"));
-        parameters.add(new Parameter("destinations",destination));
-        Needle.onBackgroundThread().execute((new  UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                Log.v("enter google","send request");
-                String result = dBmanager.sendRequest("GET",false,link,parameters);
-                return result;
-            }
+        parameters.add(new Parameter("origins", origins));
+        parameters.add(new Parameter("key", "AIzaSyDiDgy4erJKrAHGJJzYG_cFkh17qJjQiN8"));
+        parameters.add(new Parameter("destinations", destination));
+        String result = dBmanager.sendRequest("GET", false, link, parameters);
+        BusStation stat_nearest_user = new BusStation();
 
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-                if (result != null) {
-                    Log.v("Distance_API_result:", result);
-                    //parse the result from distance matrix API and save it in user_stat_dists
-                    ParseJsonDist(result);
-                    if (user_stat_dists.size() > 0) {
-                        //get nearest station to source
-                        distance nearest_to_user_dist = new distance();
-                        nearest_to_user_dist.dist = 1000000;
-                        for (distance stat : user_stat_dists) {
-                            if (stat.dist < nearest_to_user_dist.dist) {
-                                nearest_to_user_dist.dist = stat.dist;
-                                nearest_to_user_dist.id = stat.id;
-                            }
-                        }
+        if (result != null) {
+            Log.v("Distance_API_result:", result);
+            //parse the result from distance matrix API and save it in user_stat_dists
+            ArrayList<distance> user_stat_dists = new ArrayList<>();
+            user_stat_dists = ParseJsonDist(result);
+            if (user_stat_dists.size() > 0) {
 
 
-                        BusStation stat_nearest_user = new BusStation();
-                        for (BusStation stat : stations) {
-                            if (stat.order == nearest_to_user_dist.id) {
-                                stat_nearest_user = stat;
-                                break;
-                            }
-                        }
+                //get nearest station to source
+                distance nearest_to_user_dist = new distance();
+                nearest_to_user_dist.dist = 1000000;
+                for (distance stat : user_stat_dists) {
+                    if (stat.dist < nearest_to_user_dist.dist) {
+                        nearest_to_user_dist.dist = stat.dist;
+                        nearest_to_user_dist.id = stat.id;
+                    }
+                }
 
-                        //discard the busses that doesn't move forward to the nearest station to the user
-                        int step_sign;
-                        movingForwardBuses = new ArrayList<TrackerJSON>();
-                        for (TrackerJSON bus : Buses) {
-                            step_sign = bus.last_visited_station_order - bus.prev_to_last_station_order;
-                            if ((step_sign == 1 && stat_nearest_user.order > bus.last_visited_station_order) || (step_sign == -1 && stat_nearest_user.order < bus.last_visited_station_order))
-                                movingForwardBuses.add(bus);
-                        }
-                        if (movingForwardBuses.size() > 0) {
-                            //nearest 5 busses to user nearest station
-                            for (int i = 0; i < movingForwardBuses.size(); i++)
-                                getNearestBusses(i, stat_nearest_user);
-                        } else {
-                            Toast toast = Toast.makeText(outView.getContext(), "No Busses comming towards you at current time", Toast.LENGTH_LONG);
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.show();
-                            //for test only//////////////////////////////////////////////////////////////////////
-                            for (int i = 0; i < Buses.size(); i++)
-                                getNearestBusses(i, stat_nearest_user);
-                            /////////////////////////////////////////////////////////////////////////////////////
-                        }
+
+                for (BusStation stat : stations) {
+                    if (stat.order == nearest_to_user_dist.id) {
+                        stat_nearest_user.order = stat.order;
+                        stat_nearest_user.longitude = stat.longitude;
+                        stat_nearest_user.latitude = stat.latitude;
+                        stat_nearest_user.distance = stat.distance;
+                        break;
                     }
                 }
             }
-        }));
+        }
+        return stat_nearest_user;
     }
+    private ArrayList<TrackerJSON> getMovingForwardBuses(){
+                //discard the busses that doesn't move forward to the nearest station to the user
+                int step_sign;
+                ArrayList<TrackerJSON> movingForwardBuses = new ArrayList<TrackerJSON>();
+                for (TrackerJSON bus : Buses) {
+                    step_sign = bus.last_visited_station_order - bus.prev_to_last_station_order;
+                    if ((step_sign == 1 && userNearestStation.order > bus.last_visited_station_order) || (step_sign == -1 && userNearestStation.order < bus.last_visited_station_order))
+                        movingForwardBuses.add(bus);
+                }
+                return movingForwardBuses;
+            }
 
-    private void ParseJsonDist(String result){
+    private ArrayList<distance> ParseJsonDist(String result){
+        ArrayList<distance> user_stat_dists = new ArrayList<>();
         try {
             distance dist_temp;
             JSONObject jsonObject = new JSONObject(result);
@@ -276,13 +299,13 @@ public class Tracking {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
+        return user_stat_dists;
     }
-    private void DisplayBuses(ArrayList<TrackerJSON> busses,int length,BusStation nearestStationUser){
+    private void DisplayBuses(ArrayList<TrackerJSON> busses,int length){
         ArrayList<LatLng> UpadatedLocation = new ArrayList<LatLng>();
         //draw the nearest BusStation
         outMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(nearestStationUser.latitude,nearestStationUser.longitude))
+                        .position(new LatLng(userNearestStation.latitude,userNearestStation.longitude))
                         .snippet("Nearest station").title("Nearest station to you"));
         //draw busses
         for (int i=0; i<length; i++) {
@@ -348,34 +371,81 @@ public class Tracking {
         Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
             @Override
             protected String doWork() {
+                String response;
                 String result = dBmanager.sendRequest("GET",true,"fetch_location.php",parameters);
-                return result;
-            }
-
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
                 Log.v("result1","request done");
                 if (result != null) {
                     Log.v("result1: ",result);
                     //parse the json and save it in 2 arrays , 1st for busses , 2nd for bus_stations.
                     ParseJSON(result);
 
-                    if (Buses.size() > 0){
+                    if (Buses.size() > 0) {
                         //set max_station_order & min_station_order
                         max_station_order = -1;
                         min_station_order = 1000000;
-                        for (BusStation stat:stations) {
+                        for (BusStation stat : stations) {
                             if (stat.order < min_station_order)
                                 min_station_order = stat.order;
                             if (stat.order > max_station_order)
                                 max_station_order = stat.order;
                         }
 
+
                         //get the nearest station to the user and determine the busses direction
-                        getDistance_maps(user_location);
-                        Log.v(Tracking.class.getName(),result);
+                        userNearestStation = getUserNearestStation_maps(user_location);
+
+                        //get Nearest moving forward busses
+                        ArrayList<TrackerJSON> movingForwardBuses = getMovingForwardBuses();
+                        if (movingForwardBuses.size() > 0) {
+                            //nearest 5 busses to user nearest station
+                            for (int i = 0; i < movingForwardBuses.size(); i++)
+                                busesDisplayed.add(getBusInfo(i));
+                            //sort the buses by the nearest
+                            for (int i = 0; i < busesDisplayed.size(); i++) {
+                                for (int j = i + 1; j < busesDisplayed.size(); j++)
+                                    if (busesDisplayed.get(i).distance_to_nearest > busesDisplayed.get(j).distance_to_nearest) {
+                                        TrackerJSON tempBus = busesDisplayed.get(i);
+                                        busesDisplayed.set(i, busesDisplayed.get(j));
+                                        busesDisplayed.set(j, tempBus);
+                                    }
+                            }
+
+                            response = "success";
+                        } else {
+                            response = "mvp";
+                            //for test only//////////////////////////////////////////////////////////////////////
+                            for (int i = 0; i < Buses.size(); i++)
+                                getBusInfo(i);
+                            /////////////////////////////////////////////////////////////////////////////////////
+                        }
                     }else{
-                        Toast toast = Toast.makeText(outView.getContext(), "There is Busline number is not tracked,it will be available soon.", Toast.LENGTH_LONG);
+                        response = "bnp";
+                    }
+                    return response;
+                }
+                return null;
+            };
+
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+                Log.v("result1","request done");
+                if (result != null) {
+                    Log.v("result1: ",result);
+                    if(result.equals("success")) {
+                        //display the busses
+                        if (busesDisplayed.size() < 3)
+                            DisplayBuses(busesDisplayed,busesDisplayed.size());
+                         else
+                            DisplayBuses(busesDisplayed,3);
+
+
+                    }else if (result.equals("mfp")) {
+                        Toast toast = Toast.makeText(outView.getContext(), "No Busses comming towards you at current time", Toast.LENGTH_LONG);
+                        toast.setGravity(Gravity.CENTER, 0, 0);
+                        toast.show();
+                    }else {
+                        Toast toast = Toast.makeText(outView.getContext(), "This Busline number is not tracked,it will be available soon.", Toast.LENGTH_LONG);
                         toast.setGravity(Gravity.CENTER, 0, 0);
                         toast.show();
                     }

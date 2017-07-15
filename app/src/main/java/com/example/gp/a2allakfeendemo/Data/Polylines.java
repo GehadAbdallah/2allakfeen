@@ -67,7 +67,7 @@ public class Polylines {
         return poly;
     }
     public void drawRouteOnMap(GoogleMap map, ArrayList<LatLng> positions){
-        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+        PolylineOptions options = new PolylineOptions().width(10).color(Color.BLUE).geodesic(true);
         options.addAll(positions);
         Polyline polyline = map.addPolyline(options);
         CameraPosition cameraPosition = new CameraPosition.Builder()
