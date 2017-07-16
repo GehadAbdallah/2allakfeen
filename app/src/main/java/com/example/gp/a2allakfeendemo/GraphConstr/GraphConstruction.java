@@ -5,18 +5,25 @@ package com.example.gp.a2allakfeendemo.GraphConstr;
  */
 import android.util.Log;
 
-import com.example.gp.a2allakfeendemo.Controller;
+import com.example.gp.a2allakfeendemo.DBmanager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import needle.Needle;
+import needle.UiRelatedTask;
+
 public class GraphConstruction {
 
     public Graph Gr;
+    protected DBmanager dBmanager;
+    public static String bus_stations_result;
+    public static String metro_stations_result;
 
     public GraphConstruction(){
         Gr = new Graph();
+        this.dBmanager = new DBmanager();
     }
 
     public void Construct_Graph() throws JSONException {
@@ -27,25 +34,23 @@ public class GraphConstruction {
         int type = 0;
 
 
-        Controller BMC = new Controller();
-
-        BMC.GetBusStations();
-        BMC.GetMetroStations();
+        GetBusStations();
+        GetMetroStations();
         //BMC.bus_stations_result == null ||
-        while ( BMC.bus_stations_result == null ||BMC.metro_stations_result == null)
-            continue;
+        while ( bus_stations_result == null ||metro_stations_result == null)
+           continue;
 
         JSONArray bus_stations = new JSONArray();
         JSONArray metro_stations = new JSONArray();
         try {
-            if (BMC.bus_stations_result != null) {
-                JSONObject jsonObj = new JSONObject(BMC.bus_stations_result);
+            if (bus_stations_result != null) {
+                JSONObject jsonObj = new JSONObject(bus_stations_result);
                 bus_stations = jsonObj.getJSONArray("busstations");
                 Log.d("busstations","line"+bus_stations.get(0));
             }
 
-            if (BMC.metro_stations_result != null) {
-                JSONObject jsonObj = new JSONObject(BMC.metro_stations_result);
+            if (metro_stations_result != null) {
+                JSONObject jsonObj = new JSONObject(metro_stations_result);
                 metro_stations = jsonObj.getJSONArray("metrostations");
                 Log.d("metrostations","line"+metro_stations.get(0));
             }
@@ -237,10 +242,10 @@ public class GraphConstruction {
         for(int i=0; i<n1.Links.size(); i++)
         {
             if(SameNode(n1.Links.get(i).Node,n2))
-            {
-                if(LineIsOnLink(ln,n1.Links.get(i)))
-                    return true;
-            }
+                {
+                    if(LineIsOnLink(ln,n1.Links.get(i)))
+                        return true;
+                }
         }
 //        int n1LinksSize = n1.Links.size();
 //        int n2LinksSize = n2.Links.size();
@@ -391,4 +396,36 @@ public class GraphConstruction {
         }
         return null;
     }
+    public void GetBusStations (){
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendGetRequest("busstations.php");
+                //Log.d("doWork",result);
+                bus_stations_result = result;
+                return bus_stations_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+            }
+        });
+    }
+
+    public void GetMetroStations (){
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                String result = dBmanager.sendGetRequest("metrostations.php");
+                Log.d("doWork",result);
+                metro_stations_result = result;
+                return metro_stations_result;
+            }
+
+            @Override
+            protected void thenDoUiRelatedWork(String result) {
+            }
+        });
+    }
+
 }

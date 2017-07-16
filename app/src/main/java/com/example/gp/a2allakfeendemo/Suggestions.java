@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.example.gp.a2allakfeendemo.Data.Parameter;
+import com.example.gp.a2allakfeendemo.GraphConstr.District;
 import com.example.gp.a2allakfeendemo.GraphConstr.DistrictsList;
 import com.example.gp.a2allakfeendemo.GraphConstr.Graph;
 import com.example.gp.a2allakfeendemo.Route_Calculation.Route;
@@ -36,11 +37,11 @@ public class Suggestions {
             @Override
             protected String doWork() {
                 Graph cachedGraph = new Graph();
-                DistrictsList cachedDistricts = new DistrictsList(cachedGraph);
+                ArrayList<District> cachedDistricts = new ArrayList<District>();
                 try {
                     // Retrieve the list from internal storage
                     cachedGraph = (Graph) InternalStorage.readObject(c, "GraphFile");
-                    cachedDistricts = (DistrictsList) InternalStorage.readObject(c, "DistrictsFile");
+                    cachedDistricts = (ArrayList<District>) InternalStorage.readObject(c, "DistrictsFile");
                     // Display the items from the list retrieved.
                 } catch (IOException e) {
                     Log.e("ReadGraph", e.getMessage());
@@ -103,7 +104,7 @@ public class Suggestions {
             String result = db.sendRequest("POST",true,"Get_Station.php",Srcprams);
             JSONObject jsonObj = new JSONObject(result);
             String SrcStat  = jsonObj.getString("station_name");
-            result = db.sendRequest("POST",true,"Get_Station.php",Dstprams);
+            result = db.sendRequest("GET",true,"Get_Station.php",Dstprams);
             jsonObj = new JSONObject(result);
             DstStat  = jsonObj.getString("station_name");
             FinalRoutes.set(i,FinalRoutes.get(i) + " From " + SrcStat + " to ");

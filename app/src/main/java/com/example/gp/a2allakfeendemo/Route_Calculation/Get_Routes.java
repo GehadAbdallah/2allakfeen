@@ -1,11 +1,16 @@
 package com.example.gp.a2allakfeendemo.Route_Calculation;
 
+import android.graphics.Path;
+
 import com.example.gp.a2allakfeendemo.GraphConstr.GraphConstruction;
 import com.example.gp.a2allakfeendemo.GraphConstr.GraphLink;
 import com.example.gp.a2allakfeendemo.GraphConstr.GraphNode;
 import com.example.gp.a2allakfeendemo.GraphConstr.Line;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
 
 /**
  * Created by Eman on 01/07/2017.
@@ -91,17 +96,17 @@ public class Get_Routes {
         boolean MetroFound = false;
         boolean TransitionFound = false;
         ArrayList<String> BusLines = new ArrayList<>();
-        for(int i=0; i<Arr.size(); i++)
-        {
-            if (Arr.get(i).line.type == 1)
-                MetroFound = true;
-            if (MetroFound && (Arr.get(i).line.type == 2 || Arr.get(i).line.type == 0))
-                TransitionFound = true;
-            if (TransitionFound && Arr.get(i).line.type == 1)
-                return true;
-            if (Arr.get(i).line.type == 2 && !BusLines.contains(Arr.get(i).line.line))
-                BusLines.add(Arr.get(i).line.line);
-        }
+            for(int i=0; i<Arr.size(); i++)
+            {
+                if (Arr.get(i).line.type == 1)
+                    MetroFound = true;
+                if (MetroFound && (Arr.get(i).line.type == 2 || Arr.get(i).line.type == 0))
+                    TransitionFound = true;
+                if (TransitionFound && Arr.get(i).line.type == 1)
+                    return true;
+                if (Arr.get(i).line.type == 2 && !BusLines.contains(Arr.get(i).line.line))
+                    BusLines.add(Arr.get(i).line.line);
+            }
 
         boolean BusFound;
         for (int i = 0 ; i < BusLines.size(); i++){
@@ -109,9 +114,9 @@ public class Get_Routes {
             BusFound = false;
             for (int j = 0 ; j < Arr.size(); j++) {
                 if (Arr.get(j).line.line.equals(BusLines.get(i)) && Arr.get(j).line.type == 2 && TransitionFound)
-                    return true;
+                        return true;
                 if (Arr.get(j).line.line.equals(BusLines.get(i)) && Arr.get(j).line.type == 2) {
-                    BusFound = true;
+                        BusFound = true;
                 }
                 else {
                     if (BusFound)

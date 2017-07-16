@@ -2,7 +2,7 @@ package com.example.gp.a2allakfeendemo.GraphConstr;
 
 import android.util.Log;
 
-import com.example.gp.a2allakfeendemo.Controller;
+import com.example.gp.a2allakfeendemo.DBmanager;
 import com.example.gp.a2allakfeendemo.Data.GeoCodingJSON;
 import com.example.gp.a2allakfeendemo.Data.address_components;
 import com.google.android.gms.maps.model.LatLng;
@@ -11,15 +11,25 @@ import com.google.gson.Gson;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import needle.Needle;
+import needle.UiRelatedTask;
+
 /**
  * Created by shosho on 18/04/2017.
  */
 
 public class DistrictsList implements Serializable {
-    ArrayList<District> DList;
+    public ArrayList<District> DList;
 
-    public DistrictsList(Graph Gr){
-        DList = new ArrayList<District>();
+    protected DBmanager dBmanager;
+    public static String district;
+
+    public DistrictsList(){
+        this.dBmanager = new DBmanager();
+    }
+
+    public ArrayList<District> ConstructDistricList(Graph Gr){
+        DList = new ArrayList<>();
         for (int i = 0; i < Gr.Nodes.size(); i++){
             // get lat and long of each node
             // get district of each node using google maps API
@@ -43,25 +53,25 @@ public class DistrictsList implements Serializable {
                 FoundDist.DistrictNodes.add(Gr.Nodes.get(i));
             }
         }
+        return DList;
     }
 
     public String GetDistrict(LatLng latLng) {
-        Controller c1 = new Controller();
-        String district = "";
-        c1.Get_District(latLng);
-        while(c1.district == null)
+        String district_name = "";
+        Get_District(latLng);
+        while(district == null)
             continue;
 
-        if (c1.district != null) {
-            Log.d("Result in controller", c1.district);
+        if (district != null) {
+            Log.d("Result in controller", district);
             final Gson gson = new Gson();
-            GeoCodingJSON geocoding_json = gson.fromJson(c1.district, GeoCodingJSON.class);
+            GeoCodingJSON geocoding_json = gson.fromJson(district, GeoCodingJSON.class);
             boolean FoundDistrict = false;
             for (int i = 0 ; i < geocoding_json.results.size(); i++){
                 ArrayList<address_components> AddComp = geocoding_json.results.get(i).address_components;
                 for (int j = 0; j < AddComp.size(); j++) {
                     if (AddComp.get(j).types.contains("administrative_area_level_2")) {
-                        district = AddComp.get(j).long_name;
+                        district_name = AddComp.get(j).long_name;
                         FoundDistrict = true;
                         break;
                     }
@@ -71,8 +81,8 @@ public class DistrictsList implements Serializable {
             }
 
         }
-        c1.district = null;
-        return district;
+        district = null;
+        return district_name;
     }
 
     public District FindDistrict(String D1){
@@ -82,6 +92,23 @@ public class DistrictsList implements Serializable {
                 return DList.get(i);
         }
         return null;
+    }
+
+    public void Get_District (final LatLng latLng){
+        Log.d("IN","Get_District CONTROLLER");
+        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
+            @Override
+            protected String doWork() {
+                Log.d("IN", "Get_District doWork");
+                String result = dBmanager.sendGetDistrict(latLng);
+                district = result;
+                return district;
+            }
+            @Override
+            protected void thenDoUiRelatedWork(String district) {
+                Log.d("DISTRICT",district);
+            }
+        });
     }
 
 }

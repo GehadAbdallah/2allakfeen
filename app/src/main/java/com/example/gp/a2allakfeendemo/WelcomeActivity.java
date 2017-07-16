@@ -17,7 +17,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
     static public Controller controller = new Controller();
     //To Store the current user id when logged in
-    SharedPreferences sharedpreferences;
+    public static SharedPreferences sharedpreferences;
     public static final String MyPREFERENCES = "MyPrefs" ;
 
     @Override

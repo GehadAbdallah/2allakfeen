@@ -2,12 +2,15 @@ package com.example.gp.a2allakfeendemo.Route_Calculation;
 
 import android.util.Log;
 
+import com.example.gp.a2allakfeendemo.GraphConstr.District;
 import com.example.gp.a2allakfeendemo.GraphConstr.DistrictsList;
 import com.example.gp.a2allakfeendemo.GraphConstr.Graph;
 import com.example.gp.a2allakfeendemo.GraphConstr.GraphConstruction;
 import com.example.gp.a2allakfeendemo.GraphConstr.GraphNode;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  * Created by Eman on 30/06/2017.
@@ -21,7 +24,7 @@ public class Get_Paths {
 
     public Integer numOfRoutes;
 
-    public void Get_Paths(Graph Gr, DistrictsList Dl, GraphNode source, GraphNode destination)
+    public void Get_Paths(Graph Gr,GraphNode source, GraphNode destination)
     {
         ArrayList<GraphNode> visited = new ArrayList<>();
 

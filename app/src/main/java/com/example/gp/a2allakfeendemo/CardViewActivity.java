@@ -26,7 +26,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-
+import android.widget.RatingBar;
+import android.widget.RatingBar.OnRatingBarChangeListener;
 import com.example.gp.a2allakfeendemo.ViewAdapters.DataObject;
 import com.example.gp.a2allakfeendemo.ViewAdapters.MyRecyclerViewAdapter;
 
@@ -42,12 +43,12 @@ public class CardViewActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private static String LOG_TAG = "CardViewActivity";
     private String result;
+    private RatingBar ratingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_view);
-
         result = getIntent().getStringExtra("Result");
         mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         mRecyclerView.setHasFixedSize(true);
@@ -55,13 +56,28 @@ public class CardViewActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new MyRecyclerViewAdapter(getDataSet(),getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
+        //lw darbet comment it
+        ratingBar = (RatingBar) findViewById(R.id.ratingBar);
+
+        ratingBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
+            public void onRatingChanged(RatingBar ratingBar, float rating,
+                                        boolean fromUser) {
+                //Insert the rating value in the database
+                int rate = Math.round(ratingBar.getRating());
+                int user_id = WelcomeActivity.sharedpreferences.getInt("CurrentUser",-3);
+                int route_id = 2;
+                Controller c = new Controller();
+                if (user_id != -3)
+                    c.Insert_routeRate(user_id,route_id,rate);
+            }
+        });
+
         // Code to Add an item with default animation
         //((MyRecyclerViewAdapter) mAdapter).addItem(obj, index);
 
         // Code to remove an item with default animation
         //((MyRecyclerViewAdapter) mAdapter).deleteItem(index);
     }
-
 
     @Override
     protected void onResume() {
@@ -79,11 +95,18 @@ public class CardViewActivity extends AppCompatActivity {
 
     private ArrayList<DataObject> getDataSet() {
         ArrayList results = new ArrayList<>();
+        ArrayList<Boolean> thereIsAbus= new ArrayList<>();
         List<String> routes = Arrays.asList(result.split(";"));
         for (int i = 0; i < routes.size(); i++) {
             int index = i+1;
             String text1 = "Route " + index;
             String text2 = routes.get(i);
+            String[]temp = routes.get(i).split(" ");
+            if(temp[1].equals("Bus"))
+                thereIsAbus.add(true);
+            else
+                thereIsAbus.add(false);
+            Log.d("thereIsAbus",Boolean.toString(thereIsAbus.get(i)));
             DataObject obj = new DataObject(text1,text2);
             results.add(obj);
         }

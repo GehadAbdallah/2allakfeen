@@ -1,4 +1,6 @@
 package com.example.gp.a2allakfeendemo.GraphConstr;
+import com.google.gson.annotations.Expose;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 

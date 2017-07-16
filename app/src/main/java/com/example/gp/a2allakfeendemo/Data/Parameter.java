@@ -1,9 +1,8 @@
 package com.example.gp.a2allakfeendemo.Data;
 
 /**
- * Created by Gehad on 6/20/2017.
+ * Created by Eman on 09/07/2017.
  */
-
 public class Parameter {
     String name;
     String value;
@@ -20,4 +19,5 @@ public class Parameter {
     public String getValue() {
         return value;
     }
+
 }

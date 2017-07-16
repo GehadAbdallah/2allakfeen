@@ -19,6 +19,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import needle.Needle;
 import needle.UiRelatedTask;
@@ -156,161 +158,49 @@ public class Controller {
         });
     }
 
-    public void GetBusStations (){
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String result = dBmanager.sendGetRequest("busstations.php");
-                //Log.d("doWork",result);
-                bus_stations_result = result;
-                return bus_stations_result;
-            }
 
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-                //mSomeTextView.setText("result: " + result);
-                //Log.d("OnPOSTEXECUTE",result);
-            }
-        });
-    }
 
-    public void GetMetroStations (){
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String result = dBmanager.sendGetRequest("metrostations.php");
-                Log.d("doWork",result);
-                metro_stations_result = result;
-                return metro_stations_result;
-            }
 
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-            }
-        });
-    }
-
-    public void GetRoutes (String src,String dst){
-        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-        parameters.add(new Parameter("src",src));
-        parameters.add(new Parameter("dst",dst));
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String result = dBmanager.sendRequest("POST",true,"getroutes.php",parameters);
-                Log.d("doWork",result);
-                routes_result = result;
-                return routes_result;
-            }
-
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-            }
-        });
-    }
-
-    public void GetRates (int routeID){
-        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-        parameters.add(new Parameter("routeID",Integer.toString(routeID)));
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String result = dBmanager.sendRequest("POST",true,"getrates.php",parameters);
-                Log.d("doWork",result);
-                rate_result = result;
-                return rate_result;
-            }
-
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-            }
-        });
-    }
-
-    public void InsertRoute (String src,String dst,String routeTobeSaved){
-        final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-        parameters.add(new Parameter("src",src));
-        parameters.add(new Parameter("dst",dst));
-        parameters.add(new Parameter("routeTobeSaved",routeTobeSaved));
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String result = dBmanager.sendRequest("POST",true,"insertroute.php",parameters);
-                return result;
-            }
-
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-                Log.d("OnPOSTEXECUTE","Enter");
-                if (result != null){
-                    //TODO: if inserted succefully go to the maps activity
-                    Log.v("result= ",result);
-                }
-            }
-        });
-    }
-
-    public void Get_District (final LatLng latLng){
-        Log.d("IN","Get_District CONTROLLER");
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                Log.d("IN", "Get_District doWork");
-                Log.e("doWork_district",Double.toString(latLng.latitude));
-                String result = dBmanager.sendGetDistrict(latLng);
-                Log.d("result", result);
-                district = result;
-                return district;
-            }
-            @Override
-            protected void thenDoUiRelatedWork(String district) {
-                Log.d("DISTRICT",district);
-            }
-        });
-    }
-
-    public void GetTime (final ArrayList<LatLng> Stations, final boolean Bus){
-        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-            @Override
-            protected String doWork() {
-                String Origin, dest;
-                ArrayList<LatLng> WayPoints = new ArrayList<LatLng>();
-                Origin = Double.toString(Stations.get(0).latitude)+","+Double.toString(Stations.get(0).longitude);
-                dest = Double.toString(Stations.get(Stations.size()-1).latitude)+","+Double.toString(Stations.get(Stations.size()-1).longitude);
-                if (Stations.size() > 2){
-                    for (int i = 1; i < Stations.size()-1; i++){
-                        WayPoints.add(Stations.get(i));
-                    }
-                }
-                String result = dBmanager.sendGetTime(Origin,dest,WayPoints,Bus);
-                time_result = result;
-                return time_result;
-            }
-
-            @Override
-            protected void thenDoUiRelatedWork(String result) {
-            }
-        });
-    }
 
     public void GetSuggestions(LatLng Src, LatLng Dst, View v, Context c) {
         Suggestions sugObj = new Suggestions();
         sugObj.Get_Suggestions(Src,Dst,v,c);
     }
+
+    public void Insert_routeRate(int userID, int routeID, int rate)
+    {
+        ArrayList<Parameter> parameters = new ArrayList<>();
+        Parameter pr1 = new Parameter("user_id",Integer.toString(userID));
+        Parameter pr2 = new Parameter("routeID",Integer.toString(routeID));
+        Parameter pr3 = new Parameter("rate",Integer.toString(rate));
+        parameters.add(pr1);
+        parameters.add(pr2);
+        parameters.add(pr3);
+        String result = dBmanager.sendRequest("GET",true,"InsertRate.php",parameters);
+        try {
+            JSONObject jsonObj = new JSONObject(result);
+            String Success  = jsonObj.getString("success");
+            Log.d("Success",Success);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     //This function connect to Tracker model to track a certain bus number
-    public void Track(GoogleMap map, final String busNumber, final LatLng user_location,View view){
+    public void Track(GoogleMap map, final String busNumber, final LatLng SourceLocation,View view){
 
         final Tracking Tracker = new Tracking(map,view);
-        Tracker.TrackBus(busNumber,user_location);
-//        Timer myTimer = new Timer();
-//        myTimer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                // call each second
-//                Tracker.TrackBus(busNumber,user_location);
-//            }
-//        }, 0, 10000);
+        final Timer myTimer = new Timer();
+        Tracker.TrackBus(busNumber,SourceLocation,myTimer);
+        myTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // call each second
+                Tracker.TrackBus(busNumber,SourceLocation,myTimer);
+            }
+        }, 0, 10000);
 
+//        myTimer.cancel();
     }
 
 }

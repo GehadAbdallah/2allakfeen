@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Timer;
 
 import needle.Needle;
 import needle.UiRelatedTask;
@@ -37,9 +38,7 @@ public class Tracking {
     BusStation userNearestStation;
     ArrayList<TrackerJSON> Buses;
     ArrayList<BusStation> stations;
-//    ArrayList<TrackerJSON> movingForwardBuses;
     ArrayList<TrackerJSON> busesDisplayed = new ArrayList<>();
-//    ArrayList<distance> user_stat_dists = new ArrayList<distance>();
 
     public Tracking(GoogleMap outMap, View view) {
         this.outMap = outMap;
@@ -55,16 +54,16 @@ public class Tracking {
         int step = currentBus.last_visited_station_order - currentBus.prev_to_last_station_order;
         int next_station_order = currentBus.last_visited_station_order + step;
         //for tests only//////////////////////////////////
-        userNearestStation.order = next_station_order + step;
-        for (int i=0 ; i<3 ; i++) {
-            if (userNearestStation.order != max_station_order && userNearestStation.order!= min_station_order)
-                userNearestStation.order = next_station_order + step;
-
-        }
-        for (BusStation stat : stations) {
-            if (stat.order == userNearestStation.order)
-                userNearestStation = stat;
-        }
+//        userNearestStation.order = next_station_order + step;
+//        for (int i=0 ; i<3 ; i++) {
+//            if (userNearestStation.order != max_station_order && userNearestStation.order!= min_station_order)
+//                userNearestStation.order = next_station_order + step;
+//
+//        }
+//        for (BusStation stat : stations) {
+//            if (stat.order == userNearestStation.order)
+//                userNearestStation = stat;
+//        }
         ////////////////////////////
         //parameters needed by api
         //origin=41.43206,-81.38992 (source location: bus location) , destination (nearest station to user's source location)
@@ -123,81 +122,13 @@ public class Tracking {
             currentBus.distance_to_nearest = dist;
             currentBus.duration_text_to_nearest = duration;
             currentBus.route_polylines = polylines;
-//            busesDisplayed.add(currentBus);
-            //i'm not sure from the if statment
-//                    if (busesDisplayed.size() == movingForwardBuses.size()){
-
-            //sort the buses by the nearest
-//            for (int i=0 ; i< busesDisplayed.size() ; i++) {
-//                for (int j = i + 1; j < busesDisplayed.size(); j++)
-//                    if (busesDisplayed.get(i).distance_to_nearest > busesDisplayed.get(j).distance_to_nearest) {
-//                        TrackerJSON tempBus = busesDisplayed.get(i);
-//                        busesDisplayed.set(i, busesDisplayed.get(j));
-//                        busesDisplayed.set(j, tempBus);
-//                    }
-//            }
-//
-//            //display the busses
-//            if (busesDisplayed.size() < 3)
-//                DisplayBuses(busesDisplayed,busesDisplayed.size(),nearestStatFinal);
-//            else
-//                DisplayBuses(busesDisplayed,3,nearestStatFinal);
-
-            //                  }
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return currentBus;
 
-//        Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
-//            @Override
-//            protected String doWork() {
-//                String result = dBmanager.sendRequest("GET",false,link,parameters);
-//                return result;
-//            }
-//
-//            @Override
-//            protected void thenDoUiRelatedWork(String result) {
-//                Log.v("Direction API result",result);
-//                try {
-//                    //parse the response
-//                    JSONObject json = new JSONObject(result);
-//                    JSONObject legs = json.getJSONArray("routes").getJSONObject(0).getJSONArray("legs").getJSONObject(0);
-//                    JSONArray steps = legs.getJSONArray("steps");
-//                    ArrayList<LatLng> polylines = polyObject.getDirectionPolylines(steps);
-//                    int dist = legs.getJSONObject("distance").getInt("value");
-//                    String duration = legs.getJSONObject("duration_in_traffic").getString("text");
-//                    currentBus.distance_to_nearest = dist;
-//                    currentBus.duration_text_to_nearest = duration;
-//                    currentBus.route_polylines = polylines;
-//                    busesDisplayed.add(currentBus);
-//                    //i'm not sure from the if statment
-////                    if (busesDisplayed.size() == movingForwardBuses.size()){
-//
-//                        //sort the buses by the nearest
-//                        for (int i=0 ; i< busesDisplayed.size() ; i++) {
-//                            for (int j = i + 1; j < busesDisplayed.size(); j++)
-//                                if (busesDisplayed.get(i).distance_to_nearest > busesDisplayed.get(j).distance_to_nearest) {
-//                                    TrackerJSON tempBus = busesDisplayed.get(i);
-//                                    busesDisplayed.set(i, busesDisplayed.get(j));
-//                                    busesDisplayed.set(j, tempBus);
-//                                }
-//                        }
-//
-//                        //display the busses
-//                        if (busesDisplayed.size() < 3)
-//                            DisplayBuses(busesDisplayed,busesDisplayed.size(),nearestStatFinal);
-//                         else
-//                            DisplayBuses(busesDisplayed,3,nearestStatFinal);
-//
-//  //                  }
-//
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
+
 
     }
 
@@ -207,7 +138,8 @@ public class Tracking {
         //parameters needed by api : origins=41.43206,-81.38992,destinations,key,departure_time=now,mode=walking
         final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
 //        String origins = Double.toString(user_location.latitude)+","+Double.toString(user_location.longitude);
-        String origins = "29.980379,31.212999"; //hard coded for tests
+//        String origins = "29.980379,31.212999"; //hard coded for tests
+        String origins = Double.toString(user_source.latitude)+","+Double.toString(user_source.longitude);
         String destination = "";
         for (int i = 0; i < stations.size(); i++) {
             if (i == 0)
@@ -229,7 +161,6 @@ public class Tracking {
             ArrayList<distance> user_stat_dists = new ArrayList<>();
             user_stat_dists = ParseJsonDist(result);
             if (user_stat_dists.size() > 0) {
-
 
                 //get nearest station to source
                 distance nearest_to_user_dist = new distance();
@@ -365,7 +296,7 @@ public class Tracking {
 
     }
 
-    public void TrackBus(String busNumber, final LatLng user_location){
+    public void TrackBus(String busNumber, final LatLng SourceLocation, final Timer myTimer){
         final ArrayList<Parameter> parameters = new ArrayList<Parameter>();
         parameters.add(new Parameter("bus_number",busNumber));
         Needle.onBackgroundThread().execute(new UiRelatedTask<String>() {
@@ -392,7 +323,7 @@ public class Tracking {
 
 
                         //get the nearest station to the user and determine the busses direction
-                        userNearestStation = getUserNearestStation_maps(user_location);
+                        userNearestStation = getUserNearestStation_maps(SourceLocation);
 
                         //get Nearest moving forward busses
                         ArrayList<TrackerJSON> movingForwardBuses = getMovingForwardBuses();
@@ -414,8 +345,8 @@ public class Tracking {
                         } else {
                             response = "mvp";
                             //for test only//////////////////////////////////////////////////////////////////////
-                            for (int i = 0; i < Buses.size(); i++)
-                                getBusInfo(i);
+//                            for (int i = 0; i < Buses.size(); i++)
+//                                getBusInfo(i);
                             /////////////////////////////////////////////////////////////////////////////////////
                         }
                     }else{
@@ -440,16 +371,18 @@ public class Tracking {
                             DisplayBuses(busesDisplayed,3);
 
 
-                    }else if (result.equals("mfp")) {
+                    }else if (result.equals("mvp")) {
+                        myTimer.cancel();
                         Toast toast = Toast.makeText(outView.getContext(), "No Busses comming towards you at current time", Toast.LENGTH_LONG);
-                        toast.setGravity(Gravity.CENTER, 0, 0);
-                        toast.show();
-                    }else {
-                        Toast toast = Toast.makeText(outView.getContext(), "This Busline number is not tracked,it will be available soon.", Toast.LENGTH_LONG);
                         toast.setGravity(Gravity.CENTER, 0, 0);
                         toast.show();
                     }
 
+                }else {
+                    myTimer.cancel();
+                    Toast toast = Toast.makeText(outView.getContext(), "This Busline number is not tracked,it will be available soon.", Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
                 }
             }
         });

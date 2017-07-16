@@ -102,7 +102,6 @@ public class DBmanager {
             Log.d("DBManager1", result);
             return result;
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             Log.d("Exception", e.getMessage());
         }
@@ -110,13 +109,13 @@ public class DBmanager {
     }
 
     public String sendGetDistrict(LatLng latLng){
-        Log.e("DBManager","IN sendGetDistrict");
+        Log.d("DBManager","IN sendGetDistrict");
         String lat = Double.toString(latLng.latitude);
         String lng = Double.toString(latLng.longitude);
         String latlong = "latlng="+lat+","+lng;
         String API_Key = "&key=AIzaSyBW3jV6YloLTAe2jHifD-ldieQSQEnIAN8";
         String link = DISTRICT_HOST_NAME+latlong+API_Key;
-        Log.e("link",link);
+        Log.d("link",link);
         //String link = HOST_NAME+fileName;
         try {
             //Connection
@@ -125,7 +124,7 @@ public class DBmanager {
             Log.d("URL",url.toString());
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             Log.d("Connection",Integer.toString(urlConnection.getResponseCode()));
-            urlConnection.setRequestMethod("GET");
+//            urlConnection.setRequestMethod("GET");
             urlConnection.connect();
 
             // Read the input stream into a String
@@ -141,10 +140,9 @@ public class DBmanager {
                 return null;
             }
             String result = buffer.toString();
-            Log.e("DBManager1", result);
+            Log.d("DBManager1", result);
             return result;
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             String err = (e.getMessage()==null)?"map failed":e.getMessage();
             Log.e("map-err2:",err);
@@ -214,5 +212,6 @@ public class DBmanager {
         }
         return null;
     }
+
 
 }

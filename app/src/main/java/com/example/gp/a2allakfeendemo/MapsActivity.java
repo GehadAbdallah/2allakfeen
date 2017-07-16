@@ -9,7 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.TabItem;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
@@ -39,6 +39,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -47,6 +48,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static android.widget.Toast.makeText;
 import static com.example.gp.a2allakfeendemo.R.id.map;
 import static com.example.gp.a2allakfeendemo.WelcomeActivity.controller;
 
@@ -57,8 +59,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private EditText busNumber;
     private ImageButton trackButton;
     private FloatingActionButton fab;
-    private TabItem sourceTab;
-    private TabItem destTab;
+    private TabLayout.Tab sourceTab;
+    private TabLayout.Tab destTab;
+    private TabLayout tabLayout;
     private LatLng user_location; //added for tracker test
     private boolean firstAppEnter = false;
     private ArrayList<Marker> Markers = new ArrayList<Marker>();
@@ -115,8 +118,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         busNumber = (EditText) findViewById(R.id.TrackEditText);
         trackButton = (ImageButton) findViewById(R.id.TrackButton);
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        sourceTab = (android.support.design.widget.TabItem) findViewById(R.id.srcTab);
-        destTab = (android.support.design.widget.TabItem) findViewById(R.id.DestTab);
+        tabLayout = (TabLayout) findViewById(R.id.tabs);
+        sourceTab = tabLayout.getTabAt(0);
+        destTab = tabLayout.getTabAt(1);
+        Log.e("sourceTab",sourceTab.getText().toString());
+
         /* ATTENTION: This was auto-generated to implement the App Indexing API.
         See https://g.co/AppIndexing/AndroidStudio for more information.*/
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -150,6 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         firstAppEnter = true;
+        sourceTab.select();
         /*Enable MyLocation button*/
         //Initialize Google Play Services
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -161,6 +168,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.setMyLocationEnabled(true);
         }
 
+
     /*Listener that is called when user click on map
     which add marker on clicked position and show Go button*/
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
@@ -168,7 +176,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapClick(LatLng point) {
                 //
-                if(destTab.isActivated()) {
+                if(destTab.isSelected()) {
                     //save current location
                     DestinationLocation = point;
                     Markers.clear();
@@ -181,8 +189,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //place marker where user just clicked
                     destMarker = mMap.addMarker(new MarkerOptions().position(point).title("Destination Location")
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(DestinationLocation));
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+
                 }
-                if (sourceTab.isActivated()){
+                if (sourceTab.isSelected()){
                     //save current location
                     SourceLocation = point;
                     Markers.clear();
@@ -195,6 +206,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //place marker where user just clicked
                     sourceMarker = mMap.addMarker(new MarkerOptions().position(point).title("Source Location")
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(SourceLocation));
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+                }
+                if (SourceLocation != null&& DestinationLocation !=null){
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                    builder.include(SourceLocation);
+                    builder.include(DestinationLocation);
+                    LatLngBounds bounds = builder.build();
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
                 }
             /*Listener on Go button, Call results page*/
                 fab.setOnClickListener(new View.OnClickListener() {
@@ -212,7 +232,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             }
                         }
                         else {
-                            Toast.makeText(v.getContext(), "Enter your Destination location", Toast.LENGTH_SHORT).show();
+                            makeText(v.getContext(), "Enter your Destination location", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -227,12 +247,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 markerOptions.position(latLng);
                 markerOptions.title("Current Position");
                 markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                if (sourceMarker != null)
+                    sourceMarker.remove();
                 sourceMarker = mMap.addMarker(markerOptions);
                 SourceLocation = sourceMarker.getPosition();
                 //TODO:show "Your location" in search bar if Source is active
                 //move map camera
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
                 return false;
             }
         });
@@ -249,15 +271,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // TODO: Get info about the selected place.
                 Log.e("Tag", "Place: " + place.getName());
                 Log.e("search bar",place.getName().toString());
-                if(sourceTab.isActivated()){
+                if(sourceTab.isSelected()){
                     SourceLocation = place.getLatLng();
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(SourceLocation);
+                    markerOptions.title("Current Position");
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                    if (sourceMarker != null)
+                        sourceMarker.remove();
+                    sourceMarker = mMap.addMarker(markerOptions);
+                    SourceLocation = sourceMarker.getPosition();
+                    //TODO:show "Your location" in search bar if Source is active
+                    //move map camera
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(SourceLocation));
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
                 }
-                if (destTab.isActivated()) {
+                if (destTab.isSelected()) {
                     DestinationLocation = place.getLatLng();
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(DestinationLocation);
+                    markerOptions.title("Current Position");
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
+                    if (destMarker != null)
+                        destMarker.remove();
+                    destMarker = mMap.addMarker(markerOptions);
+                    SourceLocation = destMarker.getPosition();
+                    //TODO:show "Your location" in search bar if Source is active
+                    //move map camera
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(DestinationLocation));
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
                 }
-//                startActivity(new Intent(MapsActivity.this, CardViewActivity.class));
-                Log.e("Tag", "Place lat: " + DestinationLocation.latitude);
-                Log.e("Tag", "Place long: " + DestinationLocation.longitude);
+                if (SourceLocation != null&& DestinationLocation !=null){
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                    builder.include(SourceLocation);
+                    builder.include(DestinationLocation);
+                    LatLngBounds bounds = builder.build();
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
+                }
             }
 
             @Override
@@ -286,9 +336,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String busNumber_text = busNumber.getText().toString();
                 if (!busNumber_text.isEmpty() && !busNumber_text.equals(null)) {
                     //call Track function and send the map to be rendered and the bus number to be tracked
-                    controller.Track(mMap, busNumber.getText().toString(), user_location, v);
+                    if (SourceLocation != null)
+                        controller.Track(mMap, busNumber.getText().toString(), SourceLocation, v);
+                    else {
+                        Toast toast = Toast.makeText(v.getContext(), "Source location not entered.", Toast.LENGTH_LONG);
+                        toast.setGravity(Gravity.CENTER, 0, 0);
+                        toast.show();
+                    }
                 }else{
-                    Toast toast = Toast.makeText(v.getContext(), "No Busses comming towards you at current time", Toast.LENGTH_LONG);
+                    Toast toast = makeText(v.getContext(), "Enter Bus Number", Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
                 }
@@ -417,7 +473,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 } else {
 
                     // Permission denied, Disable the functionality that depends on this permission.
-                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
+                    makeText(this, "permission denied", Toast.LENGTH_LONG).show();
                 }
                 return;
             }
